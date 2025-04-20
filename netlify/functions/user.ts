@@ -1,8 +1,13 @@
-import { Handler } from "@netlify/functions";
+import { Handler, HandlerEvent } from "@netlify/functions";
 import { UserResponse, UpdateUserRequest, SuccessResponse, ErrorResponse } from "./types";
-import { validateAuthorizationHeader, validateRequiredFields } from "./utils";
+import { validateAuthorizationHeader } from "./utils";
+import { MongoClient } from "mongodb";
+import { encryptData, decryptData } from "./utils/crypto";
 
-const handler: Handler = async (event) => {
+const client = new MongoClient(process.env.MONGODB_URI!);
+const db = client.db(process.env.MONGODB_DATABASE);
+
+const handler: Handler = async (event: HandlerEvent) => {
   const validationError = validateAuthorizationHeader(event);
   if (validationError) {
     return {
@@ -13,14 +18,31 @@ const handler: Handler = async (event) => {
 
   if (event.httpMethod === "GET") {
     try {
-      // TODO: Implementar a lógica de obtenção dos dados do usuário
-      // 1. Extrair o token
-      // 2. Buscar os dados do usuário
-      // 3. Retornar os dados
+      const token = event.headers.authorization!.replace('Bearer ', '');
+
+      await client.connect();
+      const user = await db.collection(process.env.MONGODB_COLLECTION_USERS!)
+        .findOne({ token });
+
+      if (!user) {
+        return {
+          statusCode: 401,
+          body: JSON.stringify({
+            pt: {
+              message: "Token inválido",
+              code: "Erro durante processamento"
+            },
+            en: {
+              message: "Invalid token",
+              code: "Error during processing"
+            }
+          } as ErrorResponse)
+        };
+      }
 
       const response: UserResponse = {
-        username: "exemplo",
-        email: "exemplo@exemplo.com"
+        username: decryptData(user.username),
+        email: decryptData(user.email)
       };
 
       return {
@@ -41,23 +63,81 @@ const handler: Handler = async (event) => {
           }
         } as ErrorResponse)
       };
+    } finally {
+      await client.close();
     }
   } else if (event.httpMethod === "PUT") {
-    const validationError = validateRequiredFields(event, ["data.username", "data.email", "data.password"]);
-    if (validationError) {
+    if (!event.body) {
       return {
         statusCode: 400,
-        body: JSON.stringify(validationError)
+        body: JSON.stringify({
+          pt: {
+            message: "Corpo da requisição não fornecido",
+            code: "Erro durante processamento"
+          },
+          en: {
+            message: "Request body not provided",
+            code: "Error during processing"
+          }
+        } as ErrorResponse)
       };
     }
 
     try {
-      const { data } = JSON.parse(event.body!) as UpdateUserRequest;
+      const token = event.headers.authorization!.replace('Bearer ', '');
+      const { data } = JSON.parse(event.body) as UpdateUserRequest;
 
-      // TODO: Implementar a lógica de atualização do usuário
-      // 1. Extrair o token
-      // 2. Atualizar os dados do usuário
-      // 3. Retornar sucesso
+      if (!data.username || !data.email || !data.password) {
+        return {
+          statusCode: 400,
+          body: JSON.stringify({
+            pt: {
+              message: "Campos obrigatórios não fornecidos",
+              code: "Erro durante processamento"
+            },
+            en: {
+              message: "Required fields not provided",
+              code: "Error during processing"
+            }
+          } as ErrorResponse)
+        };
+      }
+
+      await client.connect();
+      const user = await db.collection(process.env.MONGODB_COLLECTION_USERS!)
+        .findOne({ token });
+
+      if (!user) {
+        return {
+          statusCode: 401,
+          body: JSON.stringify({
+            pt: {
+              message: "Token inválido",
+              code: "Erro durante processamento"
+            },
+            en: {
+              message: "Invalid token",
+              code: "Error during processing"
+            }
+          } as ErrorResponse)
+        };
+      }
+
+      const encryptedUsername = encryptData(data.username);
+      const encryptedEmail = encryptData(data.email);
+      const encryptedPassword = encryptData(data.password);
+
+      await db.collection(process.env.MONGODB_COLLECTION_USERS!)
+        .updateOne(
+          { token },
+          { 
+            $set: { 
+              username: encryptedUsername,
+              email: encryptedEmail,
+              password: encryptedPassword
+            } 
+          }
+        );
 
       const response: SuccessResponse = {
         pt: {
@@ -88,6 +168,8 @@ const handler: Handler = async (event) => {
           }
         } as ErrorResponse)
       };
+    } finally {
+      await client.close();
     }
   }
 

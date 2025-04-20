@@ -65,6 +65,7 @@ export interface CreateNoteRequest {
   note: {
     title: string;
     content: string;
+    public?: boolean;
   };
 }
 
@@ -72,12 +73,12 @@ export interface UpdateNoteRequest {
   newNote: {
     title: string;
     content: string;
+    public?: boolean;
   };
 }
 
 export interface Note {
   id: string;
-  user: string;
   title: string;
   content: string;
   date: number;

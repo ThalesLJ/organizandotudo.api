@@ -5,8 +5,9 @@ export interface UserDocument {
     username: string;
     email: string;
     password: string;
-    createdAt: Date;
-    updatedAt: Date;
+    token: string;
+    tokenExpiration: Date;
+    active: boolean;
 }
 
 export interface NoteDocument {

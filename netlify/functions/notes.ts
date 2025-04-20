@@ -1,8 +1,13 @@
-import { Handler } from "@netlify/functions";
+import { Handler, HandlerEvent } from "@netlify/functions";
 import { Note, ErrorResponse } from "./types";
 import { validateAuthorizationHeader } from "./utils";
+import { MongoClient } from "mongodb";
+import { decryptData } from "./utils/crypto";
 
-const handler: Handler = async (event) => {
+const client = new MongoClient(process.env.MONGODB_URI!);
+const db = client.db(process.env.MONGODB_DATABASE);
+
+const handler: Handler = async (event: HandlerEvent) => {
   if (event.httpMethod !== "GET") {
     return {
       statusCode: 405,
@@ -28,29 +33,40 @@ const handler: Handler = async (event) => {
   }
 
   try {
-    // TODO: Implementar a lógica de listagem das notas
-    // 1. Extrair o token
-    // 2. Buscar as notas do usuário
-    // 3. Retornar a lista
+    const token = event.headers.authorization!.replace('Bearer ', '');
 
-    const response: Note[] = [
-      {
-        id: "1",
-        user: "user_id",
-        title: "Exemplo 1",
-        content: "Conteúdo exemplo 1",
-        date: Date.now(),
-        public: false
-      },
-      {
-        id: "2",
-        user: "user_id",
-        title: "Exemplo 2",
-        content: "Conteúdo exemplo 2",
-        date: Date.now(),
-        public: true
-      }
-    ];
+    await client.connect();
+    const user = await db.collection(process.env.MONGODB_COLLECTION_USERS!)
+      .findOne({ token });
+
+    if (!user) {
+      return {
+        statusCode: 401,
+        body: JSON.stringify({
+          pt: {
+            message: "Token inválido",
+            code: "Erro durante processamento"
+          },
+          en: {
+            message: "Invalid token",
+            code: "Error during processing"
+          }
+        } as ErrorResponse)
+      };
+    }
+
+    const notes = await db.collection(process.env.MONGODB_COLLECTION_NOTES!)
+      .find({ userId: user._id })
+      .sort({ date: -1 })
+      .toArray();
+
+    const response: Note[] = notes.map(note => ({
+      id: note._id.toString(),
+      title: decryptData(note.title),
+      content: decryptData(note.content),
+      date: note.date.getTime(),
+      public: note.public
+    }));
 
     return {
       statusCode: 200,
@@ -70,6 +86,8 @@ const handler: Handler = async (event) => {
         }
       } as ErrorResponse)
     };
+  } finally {
+    await client.close();
   }
 };
 

@@ -1,10 +1,13 @@
-import { Handler } from "@netlify/functions";
+import { Handler, HandlerEvent } from "@netlify/functions";
 import { Note, CreateNoteRequest, UpdateNoteRequest, SuccessResponse, ErrorResponse } from "./types";
-import { validateAuthorizationHeader, validateRequiredFields, validateQueryStringParameters } from "./utils";
-import { connectToDatabase, closeConnection } from "./config/mongodb";
-import { ObjectId } from "mongodb";
+import { validateAuthorizationHeader } from "./utils";
+import { MongoClient, ObjectId } from "mongodb";
+import { encryptData, decryptData } from "./utils/crypto";
 
-const handler: Handler = async (event) => {
+const client = new MongoClient(process.env.MONGODB_URI!);
+const db = client.db(process.env.MONGODB_DATABASE);
+
+const handler: Handler = async (event: HandlerEvent) => {
   const validationError = validateAuthorizationHeader(event);
   if (validationError) {
     return {
@@ -14,80 +17,165 @@ const handler: Handler = async (event) => {
   }
 
   if (event.httpMethod === "GET") {
-    const validationError = validateQueryStringParameters(event, ["id"]);
-    if (validationError) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify(validationError)
-      };
-    }
-
     try {
-      const { notes } = await connectToDatabase();
+      const token = event.headers.authorization!.replace('Bearer ', '');
       const noteId = event.queryStringParameters?.id;
-      
+
       if (!noteId) {
         return {
           statusCode: 400,
           body: JSON.stringify({
-            pt: { message: "ID da nota não fornecido", code: "MissingNoteId" },
-            en: { message: "Note ID not provided", code: "MissingNoteId" }
-          })
+            pt: {
+              message: "ID da nota não fornecido",
+              code: "Erro durante processamento"
+            },
+            en: {
+              message: "Note ID not provided",
+              code: "Error during processing"
+            }
+          } as ErrorResponse)
         };
       }
 
-      const note = await notes.findOne({ _id: new ObjectId(noteId) });
-      
+      await client.connect();
+      const user = await db.collection(process.env.MONGODB_COLLECTION_USERS!)
+        .findOne({ token });
+
+      if (!user) {
+        return {
+          statusCode: 401,
+          body: JSON.stringify({
+            pt: {
+              message: "Token inválido",
+              code: "Erro durante processamento"
+            },
+            en: {
+              message: "Invalid token",
+              code: "Error during processing"
+            }
+          } as ErrorResponse)
+        };
+      }
+
+      const note = await db.collection(process.env.MONGODB_COLLECTION_NOTES!)
+        .findOne({ _id: new ObjectId(noteId), userId: user._id });
+
       if (!note) {
         return {
           statusCode: 404,
           body: JSON.stringify({
-            pt: { message: "Nota não encontrada", code: "NoteNotFound" },
-            en: { message: "Note not found", code: "NoteNotFound" }
-          })
+            pt: {
+              message: "Nota não encontrada",
+              code: "Erro durante processamento"
+            },
+            en: {
+              message: "Note not found",
+              code: "Error during processing"
+            }
+          } as ErrorResponse)
         };
       }
 
-      await closeConnection();
+      const response: Note = {
+        id: note._id.toString(),
+        title: decryptData(note.title),
+        content: decryptData(note.content),
+        date: note.date.getTime(),
+        public: note.public
+      };
 
       return {
         statusCode: 200,
-        body: JSON.stringify({
-          id: note._id.toString(),
-          title: note.title,
-          content: note.content,
-          date: note.date,
-          public: note.public
-        })
+        body: JSON.stringify(response)
       };
     } catch (error) {
-      console.error("Erro ao buscar nota:", error);
-      await closeConnection();
-      
       return {
         statusCode: 500,
         body: JSON.stringify({
-          pt: { message: "Erro interno do servidor", code: "ServerError" },
-          en: { message: "Internal server error", code: "ServerError" }
-        })
+          pt: {
+            message: "Erro ao buscar nota",
+            code: "Erro durante processamento"
+          },
+          en: {
+            message: "Error getting note",
+            code: "Error during processing"
+          }
+        } as ErrorResponse)
       };
+    } finally {
+      await client.close();
     }
   } else if (event.httpMethod === "POST") {
-    const validationError = validateRequiredFields(event, ["note.title", "note.content"]);
-    if (validationError) {
+    if (!event.body) {
       return {
         statusCode: 400,
-        body: JSON.stringify(validationError)
+        body: JSON.stringify({
+          pt: {
+            message: "Corpo da requisição não fornecido",
+            code: "Erro durante processamento"
+          },
+          en: {
+            message: "Request body not provided",
+            code: "Error during processing"
+          }
+        } as ErrorResponse)
       };
     }
 
     try {
-      const { note } = JSON.parse(event.body!) as CreateNoteRequest;
+      const token = event.headers.authorization!.replace('Bearer ', '');
+      const { note } = JSON.parse(event.body) as CreateNoteRequest;
 
-      // TODO: Implementar a lógica de criação da nota
-      // 1. Extrair o token
-      // 2. Criar a nota
-      // 3. Retornar sucesso
+      if (!note.title || !note.content) {
+        return {
+          statusCode: 400,
+          body: JSON.stringify({
+            pt: {
+              message: "Campos obrigatórios não fornecidos",
+              code: "Erro durante processamento"
+            },
+            en: {
+              message: "Required fields not provided",
+              code: "Error during processing"
+            }
+          } as ErrorResponse)
+        };
+      }
+
+      await client.connect();
+      const user = await db.collection(process.env.MONGODB_COLLECTION_USERS!)
+        .findOne({ token });
+
+      if (!user) {
+        return {
+          statusCode: 401,
+          body: JSON.stringify({
+            pt: {
+              message: "Token inválido",
+              code: "Erro durante processamento"
+            },
+            en: {
+              message: "Invalid token",
+              code: "Error during processing"
+            }
+          } as ErrorResponse)
+        };
+      }
+
+      const encryptedTitle = encryptData(note.title);
+      const encryptedContent = encryptData(note.content);
+      const now = new Date();
+
+      const newNote = {
+        userId: user._id,
+        title: encryptedTitle,
+        content: encryptedContent,
+        date: now,
+        public: note.public || false
+      };
+
+      const result = await db.collection(process.env.MONGODB_COLLECTION_NOTES!)
+        .insertOne(newNote);
 
       const response: SuccessResponse = {
         pt: {
@@ -101,7 +189,7 @@ const handler: Handler = async (event) => {
       };
 
       return {
-        statusCode: 200,
+        statusCode: 201,
         body: JSON.stringify(response)
       };
     } catch (error) {
@@ -118,31 +206,113 @@ const handler: Handler = async (event) => {
           }
         } as ErrorResponse)
       };
+    } finally {
+      await client.close();
     }
   } else if (event.httpMethod === "PUT") {
-    const validationError = validateQueryStringParameters(event, ["id"]);
-    if (validationError) {
+    if (!event.body) {
       return {
         statusCode: 400,
-        body: JSON.stringify(validationError)
-      };
-    }
-
-    const bodyValidationError = validateRequiredFields(event, ["newNote.title", "newNote.content"]);
-    if (bodyValidationError) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify(bodyValidationError)
+        body: JSON.stringify({
+          pt: {
+            message: "Corpo da requisição não fornecido",
+            code: "Erro durante processamento"
+          },
+          en: {
+            message: "Request body not provided",
+            code: "Error during processing"
+          }
+        } as ErrorResponse)
       };
     }
 
     try {
-      const { newNote } = JSON.parse(event.body!) as UpdateNoteRequest;
+      const token = event.headers.authorization!.replace('Bearer ', '');
+      const noteId = event.queryStringParameters?.id;
+      const { newNote } = JSON.parse(event.body) as UpdateNoteRequest;
 
-      // TODO: Implementar a lógica de atualização da nota
-      // 1. Extrair o token e o ID
-      // 2. Atualizar a nota
-      // 3. Retornar sucesso
+      if (!noteId) {
+        return {
+          statusCode: 400,
+          body: JSON.stringify({
+            pt: {
+              message: "ID da nota não fornecido",
+              code: "Erro durante processamento"
+            },
+            en: {
+              message: "Note ID not provided",
+              code: "Error during processing"
+            }
+          } as ErrorResponse)
+        };
+      }
+
+      if (!newNote.title || !newNote.content) {
+        return {
+          statusCode: 400,
+          body: JSON.stringify({
+            pt: {
+              message: "Campos obrigatórios não fornecidos",
+              code: "Erro durante processamento"
+            },
+            en: {
+              message: "Required fields not provided",
+              code: "Error during processing"
+            }
+          } as ErrorResponse)
+        };
+      }
+
+      await client.connect();
+      const user = await db.collection(process.env.MONGODB_COLLECTION_USERS!)
+        .findOne({ token });
+
+      if (!user) {
+        return {
+          statusCode: 401,
+          body: JSON.stringify({
+            pt: {
+              message: "Token inválido",
+              code: "Erro durante processamento"
+            },
+            en: {
+              message: "Invalid token",
+              code: "Error during processing"
+            }
+          } as ErrorResponse)
+        };
+      }
+
+      const encryptedTitle = encryptData(newNote.title);
+      const encryptedContent = encryptData(newNote.content);
+
+      const result = await db.collection(process.env.MONGODB_COLLECTION_NOTES!)
+        .updateOne(
+          { _id: new ObjectId(noteId), userId: user._id },
+          { 
+            $set: { 
+              title: encryptedTitle,
+              content: encryptedContent,
+              public: newNote.public ?? false
+            } 
+          }
+        );
+
+      if (result.matchedCount === 0) {
+        return {
+          statusCode: 404,
+          body: JSON.stringify({
+            pt: {
+              message: "Nota não encontrada",
+              code: "Erro durante processamento"
+            },
+            en: {
+              message: "Note not found",
+              code: "Error during processing"
+            }
+          } as ErrorResponse)
+        };
+      }
 
       const response: SuccessResponse = {
         pt: {
@@ -173,21 +343,68 @@ const handler: Handler = async (event) => {
           }
         } as ErrorResponse)
       };
+    } finally {
+      await client.close();
     }
   } else if (event.httpMethod === "DELETE") {
-    const validationError = validateQueryStringParameters(event, ["id"]);
-    if (validationError) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify(validationError)
-      };
-    }
-
     try {
-      // TODO: Implementar a lógica de exclusão da nota
-      // 1. Extrair o token e o ID
-      // 2. Excluir a nota
-      // 3. Retornar sucesso
+      const token = event.headers.authorization!.replace('Bearer ', '');
+      const noteId = event.queryStringParameters?.id;
+
+      if (!noteId) {
+        return {
+          statusCode: 400,
+          body: JSON.stringify({
+            pt: {
+              message: "ID da nota não fornecido",
+              code: "Erro durante processamento"
+            },
+            en: {
+              message: "Note ID not provided",
+              code: "Error during processing"
+            }
+          } as ErrorResponse)
+        };
+      }
+
+      await client.connect();
+      const user = await db.collection(process.env.MONGODB_COLLECTION_USERS!)
+        .findOne({ token });
+
+      if (!user) {
+        return {
+          statusCode: 401,
+          body: JSON.stringify({
+            pt: {
+              message: "Token inválido",
+              code: "Erro durante processamento"
+            },
+            en: {
+              message: "Invalid token",
+              code: "Error during processing"
+            }
+          } as ErrorResponse)
+        };
+      }
+
+      const result = await db.collection(process.env.MONGODB_COLLECTION_NOTES!)
+        .deleteOne({ _id: new ObjectId(noteId), userId: user._id });
+
+      if (result.deletedCount === 0) {
+        return {
+          statusCode: 404,
+          body: JSON.stringify({
+            pt: {
+              message: "Nota não encontrada",
+              code: "Erro durante processamento"
+            },
+            en: {
+              message: "Note not found",
+              code: "Error during processing"
+            }
+          } as ErrorResponse)
+        };
+      }
 
       const response: SuccessResponse = {
         pt: {
@@ -218,6 +435,8 @@ const handler: Handler = async (event) => {
           }
         } as ErrorResponse)
       };
+    } finally {
+      await client.close();
     }
   }
 

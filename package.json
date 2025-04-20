@@ -9,19 +9,20 @@
     "test": "jest"
   },
   "dependencies": {
-    "@netlify/functions": "^2.0.0",
-    "mongodb": "^6.0.0",
-    "jsonwebtoken": "^9.0.0",
     "bcryptjs": "^2.4.3",
-    "dotenv": "^16.0.3"
+    "dotenv": "^16.0.3",
+    "jsonwebtoken": "^9.0.0",
+    "mongodb": "^6.15.0"
   },
   "devDependencies": {
-    "@types/node": "^18.0.0",
+    "@netlify/functions": "^3.1.2",
+    "@supabase/supabase-js": "^2.49.4",
     "@types/bcryptjs": "^2.4.2",
-    "@types/jsonwebtoken": "^9.0.0",
-    "typescript": "^5.0.0",
-    "jest": "^29.0.0",
     "@types/jest": "^29.0.0",
-    "ts-jest": "^29.0.0"
+    "@types/jsonwebtoken": "^9.0.0",
+    "@types/node": "^18.19.86",
+    "jest": "^29.0.0",
+    "ts-jest": "^29.0.0",
+    "typescript": "^5.0.0"
   }
-} 
+}

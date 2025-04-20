@@ -1,6 +1,10 @@
 import { Handler } from "@netlify/functions";
 import { SuccessResponse, ErrorResponse } from "./types";
 import { validateAuthorizationHeader, validateQueryStringParameters } from "./utils";
+import { MongoClient, ObjectId } from "mongodb";
+
+const client = new MongoClient(process.env.MONGODB_URI!);
+const db = client.db(process.env.MONGODB_DATABASE);
 
 const handler: Handler = async (event) => {
   if (event.httpMethod !== "PUT") {
@@ -36,10 +40,69 @@ const handler: Handler = async (event) => {
   }
 
   try {
-    // TODO: Implementar a lógica de publicação da nota
-    // 1. Extrair o token e o ID
-    // 2. Atualizar o status de publicação da nota
-    // 3. Retornar sucesso
+    const token = event.headers.authorization!.replace('Bearer ', '');
+    const noteId = event.queryStringParameters?.id;
+
+    await client.connect();
+    const user = await db.collection(process.env.MONGODB_COLLECTION_USERS!)
+      .findOne({ token });
+
+    if (!user) {
+      return {
+        statusCode: 401,
+        body: JSON.stringify({
+          pt: {
+            message: "Token inválido",
+            code: "Erro durante processamento"
+          },
+          en: {
+            message: "Invalid token",
+            code: "Error during processing"
+          }
+        } as ErrorResponse)
+      };
+    }
+
+    const note = await db.collection(process.env.MONGODB_COLLECTION_NOTES!)
+      .findOne({ _id: new ObjectId(noteId), userId: user._id });
+
+    if (!note) {
+      return {
+        statusCode: 404,
+        body: JSON.stringify({
+          pt: {
+            message: "Nota não encontrada",
+            code: "Erro durante processamento"
+          },
+          en: {
+            message: "Note not found",
+            code: "Error during processing"
+          }
+        } as ErrorResponse)
+      };
+    }
+
+    const result = await db.collection(process.env.MONGODB_COLLECTION_NOTES!)
+      .updateOne(
+        { _id: new ObjectId(noteId), userId: user._id },
+        { $set: { public: !note.public } }
+      );
+
+    if (result.matchedCount === 0) {
+      return {
+        statusCode: 404,
+        body: JSON.stringify({
+          pt: {
+            message: "Nota não encontrada",
+            code: "Erro durante processamento"
+          },
+          en: {
+            message: "Note not found",
+            code: "Error during processing"
+          }
+        } as ErrorResponse)
+      };
+    }
 
     const response: SuccessResponse = {
       pt: {
@@ -70,6 +133,8 @@ const handler: Handler = async (event) => {
         }
       } as ErrorResponse)
     };
+  } finally {
+    await client.close();
   }
 };
 

@@ -40,7 +40,7 @@ export function validateRequiredFields(event: HandlerEvent, fields: string[]): E
 export function validateAuthorizationHeader(event: HandlerEvent): ErrorResponse | null {
   const authHeader = event.headers.authorization;
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  if (!authHeader) {
     return {
       pt: {
         message: "Token inválido",

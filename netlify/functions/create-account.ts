@@ -1,8 +1,8 @@
 import { Handler } from "@netlify/functions";
 import { connectToDatabase, closeConnection } from './config/mongodb';
 import { UserDocument } from './types/mongodb';
-import { hashPassword } from './utils/auth';
 import { encryptData } from './utils/crypto';
+import jwt from 'jsonwebtoken';
 
 const handler: Handler = async (event) => {
   if (event.httpMethod !== "POST") {
@@ -47,7 +47,8 @@ const handler: Handler = async (event) => {
     const { users } = await connectToDatabase();
 
     const encryptedUsername = encryptData(username);
-    const existingUser = await users.findOne({ $or: [{ username: encryptedUsername }, { email }] });
+    const encryptedEmail = encryptData(email);
+    const existingUser = await users.findOne({ $or: [{ username: encryptedUsername }, { email: encryptedEmail }] });
     if (existingUser) {
       return {
         statusCode: 409,
@@ -58,16 +59,30 @@ const handler: Handler = async (event) => {
       };
     }
 
-    const hashedPassword = await hashPassword(password);
-    const encryptedPassword = encryptData(hashedPassword);
-    const now = new Date();
+    const encryptedPassword = encryptData(password);
+    const tokenExpiration = new Date();
+    tokenExpiration.setDate(tokenExpiration.getDate() + 30);
+
+    const tokenData = {
+      username,
+      email,
+      password,
+      issuedAt: new Date().toISOString()
+    };
+
+    const token = jwt.sign(
+      tokenData,
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '30d' }
+    );
 
     const newUser: UserDocument = {
       username: encryptedUsername,
-      email,
+      email: encryptedEmail,
       password: encryptedPassword,
-      createdAt: now,
-      updatedAt: now
+      token,
+      tokenExpiration,
+      active: true
     };
 
     await users.insertOne(newUser);
@@ -76,8 +91,9 @@ const handler: Handler = async (event) => {
     return {
       statusCode: 201,
       body: JSON.stringify({
-        pt: { message: 'Conta criada com sucesso', code: 'Success' },
-        en: { message: 'Account created successfully', code: 'Success' }
+        token,
+        username,
+        email
       })
     };
   } catch (error) {
