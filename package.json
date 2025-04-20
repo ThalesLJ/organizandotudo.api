@@ -1,0 +1,27 @@
+{
+  "name": "organizandotudo.api",
+  "version": "1.0.0",
+  "description": "API para o projeto Organizando Tudo",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "netlify dev",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@netlify/functions": "^2.0.0",
+    "mongodb": "^6.0.0",
+    "jsonwebtoken": "^9.0.0",
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^18.0.0",
+    "@types/bcryptjs": "^2.4.2",
+    "@types/jsonwebtoken": "^9.0.0",
+    "typescript": "^5.0.0",
+    "jest": "^29.0.0",
+    "@types/jest": "^29.0.0",
+    "ts-jest": "^29.0.0"
+  }
+} 

@@ -1,0 +1,43 @@
+[build]
+  functions = "netlify/functions"
+  command = "npm run build"
+  publish = "dist"
+
+[functions]
+  node_bundler = "esbuild"
+  external_node_modules = ["mongodb", "jsonwebtoken", "bcryptjs"]
+
+[[redirects]]
+  from = "/api/CreateAccount"
+  to = "/.netlify/functions/create-account"
+  status = 200
+
+[[redirects]]
+  from = "/api/Login"
+  to = "/.netlify/functions/login"
+  status = 200
+
+[[redirects]]
+  from = "/api/VerifyToken"
+  to = "/.netlify/functions/verify-token"
+  status = 200
+
+[[redirects]]
+  from = "/api/User"
+  to = "/.netlify/functions/user"
+  status = 200
+
+[[redirects]]
+  from = "/api/Note"
+  to = "/.netlify/functions/note"
+  status = 200
+
+[[redirects]]
+  from = "/api/Notes"
+  to = "/.netlify/functions/notes"
+  status = 200
+
+[[redirects]]
+  from = "/api/PublishNote"
+  to = "/.netlify/functions/publish-note"
+  status = 200 

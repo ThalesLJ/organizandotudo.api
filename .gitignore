@@ -134,3 +134,13 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# Additional changes from the code block
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Local Netlify folder
+.netlify
