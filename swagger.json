@@ -1,0 +1,2518 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "API Organizando Tudo",
+    "description": "API for notes management",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "/.netlify/functions",
+      "description": "Local server"
+    }
+  ],
+  "paths": {
+    "/create-account": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Create Account",
+        "description": "Creates a new user account",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["username", "password", "email"],
+                "properties": {
+                  "username": {
+                    "type": "string",
+                    "description": "Username"
+                  },
+                  "password": {
+                    "type": "string",
+                    "description": "Password"
+                  },
+                  "email": {
+                    "type": "string",
+                    "description": "Email address"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Account created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string",
+                      "description": "JWT token"
+                    },
+                    "username": {
+                      "type": "string",
+                      "description": "Username"
+                    },
+                    "email": {
+                      "type": "string",
+                      "description": "Email address"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - missing data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "Corpo da requisição não fornecido"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "MissingBody"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "Request body not provided"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "MissingBody"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Method not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "Método não permitido"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "MethodNotAllowed"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "Method not allowed"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "MethodNotAllowed"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict - User or email already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "Usuário ou email já existe"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "DuplicateUser"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "User or email already exists"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "DuplicateUser"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "Erro interno do servidor"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "ServerError"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "Internal server error"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "ServerError"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/login": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Login",
+        "description": "Authenticates a user and returns a JWT token",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["username", "password"],
+                "properties": {
+                  "username": {
+                    "type": "string",
+                    "description": "Username"
+                  },
+                  "password": {
+                    "type": "string",
+                    "description": "Password"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string",
+                      "description": "JWT token"
+                    },
+                    "username": {
+                      "type": "string",
+                      "description": "Username"
+                    },
+                    "email": {
+                      "type": "string",
+                      "description": "Email address"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - missing data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "Corpo da requisição não fornecido"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "MissingBody"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "Request body not provided"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "MissingBody"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "Username ou senha inválidos"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "InvalidCredentials"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "Invalid username or password"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "InvalidCredentials"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Method not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "Método não permitido"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "MethodNotAllowed"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "Method not allowed"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "MethodNotAllowed"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "Erro interno do servidor"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "ServerError"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "Internal server error"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "ServerError"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/verify-token": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Verify Token",
+        "description": "Verifies if the JWT token is valid",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Token is valid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "Token válido"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Success code",
+                          "example": "Sucesso"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "Valid token"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Success code",
+                          "example": "Success"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "Token inválido"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Erro durante processamento"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "Invalid token"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Error during processing"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Method not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "Método não permitido"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Erro durante processamento"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "Method not allowed"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Error during processing"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "Erro ao verificar token"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Erro durante processamento"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "Error verifying token"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Error during processing"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user": {
+      "get": {
+        "tags": ["User"],
+        "summary": "Get User",
+        "description": "Gets the current user information",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User information retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "username": {
+                      "type": "string",
+                      "description": "Username"
+                    },
+                    "email": {
+                      "type": "string",
+                      "description": "Email address"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "Token inválido"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Erro durante processamento"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "Invalid token"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Error during processing"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Method not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "Método não permitido"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Erro durante processamento"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "Method not allowed"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Error during processing"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "Erro ao obter dados do usuário"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Erro durante processamento"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "Error getting user data"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Error during processing"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["User"],
+        "summary": "Update User",
+        "description": "Updates the current user information",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "username": {
+                        "type": "string",
+                        "description": "New username"
+                      },
+                      "email": {
+                        "type": "string",
+                        "description": "New email address"
+                      },
+                      "password": {
+                        "type": "string",
+                        "description": "New password"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "Sua conta foi atualizada com sucesso!"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Success code",
+                          "example": "Sucesso"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "Your account has been successfully updated!"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Success code",
+                          "example": "Success"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - missing data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "Corpo da requisição não fornecido"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Erro durante processamento"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "Request body not provided"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Error during processing"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "Token inválido"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Erro durante processamento"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "Invalid token"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Error during processing"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Method not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "Método não permitido"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Erro durante processamento"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "Method not allowed"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Error during processing"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "Erro ao atualizar usuário"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Erro durante processamento"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "Error updating user"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Error during processing"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notes": {
+      "post": {
+        "tags": ["Notes"],
+        "summary": "Create Note",
+        "description": "Creates a new note",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["title", "content"],
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "description": "Note title"
+                  },
+                  "content": {
+                    "type": "string",
+                    "description": "Note content"
+                  },
+                  "public": {
+                    "type": "boolean",
+                    "description": "Publication status"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Note created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Note ID"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Note title"
+                    },
+                    "content": {
+                      "type": "string",
+                      "description": "Note content"
+                    },
+                    "public": {
+                      "type": "boolean",
+                      "description": "Publication status"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Creation date"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - missing data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "Corpo da requisição não fornecido"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Erro durante processamento"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "Request body not provided"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Error during processing"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "Token inválido"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Erro durante processamento"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "Invalid token"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Error during processing"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Method not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "Método não permitido"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Erro durante processamento"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "Method not allowed"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Error during processing"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "Erro ao criar nota"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Erro durante processamento"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "Error creating note"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Error during processing"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": ["Notes"],
+        "summary": "List Notes",
+        "description": "Returns all user notes",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of notes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "description": "Note ID"
+                      },
+                      "title": {
+                        "type": "string",
+                        "description": "Note title"
+                      },
+                      "content": {
+                        "type": "string",
+                        "description": "Note content"
+                      },
+                      "public": {
+                        "type": "boolean",
+                        "description": "Publication status"
+                      },
+                      "date": {
+                        "type": "number",
+                        "description": "Creation date timestamp"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "Token inválido"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Erro durante processamento"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "Invalid token"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Error during processing"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Method not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "Método não permitido"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Erro durante processamento"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "Method not allowed"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Error during processing"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "Erro ao listar notas"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Erro durante processamento"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "Error listing notes"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Error during processing"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/note": {
+      "get": {
+        "tags": ["Notes"],
+        "summary": "Get Note",
+        "description": "Returns a specific note",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Note ID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Note details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Note ID"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Note title"
+                    },
+                    "content": {
+                      "type": "string",
+                      "description": "Note content"
+                    },
+                    "public": {
+                      "type": "boolean",
+                      "description": "Publication status"
+                    },
+                    "date": {
+                      "type": "number",
+                      "description": "Creation date timestamp"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - missing note ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "ID da nota não fornecido"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Erro durante processamento"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "Note ID not provided"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Error during processing"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "Token inválido"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Erro durante processamento"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "Invalid token"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Error during processing"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Note not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "Nota não encontrada"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Erro durante processamento"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "Note not found"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Error during processing"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "Erro ao buscar nota"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Erro durante processamento"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "Error getting note"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Error during processing"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Notes"],
+        "summary": "Update Note",
+        "description": "Updates a specific note",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Note ID"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "newNote": {
+                    "type": "object",
+                    "properties": {
+                      "title": {
+                        "type": "string",
+                        "description": "New note title"
+                      },
+                      "content": {
+                        "type": "string",
+                        "description": "New note content"
+                      },
+                      "public": {
+                        "type": "boolean",
+                        "description": "New publication status"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Note updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "Sua nota foi atualizada com sucesso!"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Success code",
+                          "example": "Sucesso"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "Your note was updated successfully!"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Success code",
+                          "example": "Success"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - missing data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "ID da nota não fornecido"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Erro durante processamento"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "Note ID not provided"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Error during processing"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "Token inválido"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Erro durante processamento"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "Invalid token"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Error during processing"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Note not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "Nota não encontrada"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Erro durante processamento"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "Note not found"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Error during processing"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "Erro ao atualizar nota"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Erro durante processamento"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "Error updating note"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Error during processing"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Notes"],
+        "summary": "Delete Note",
+        "description": "Deletes a specific note",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Note ID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Note deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "Sua nota foi excluída com sucesso!"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Success code",
+                          "example": "Sucesso"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "Your note was deleted successfully!"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Success code",
+                          "example": "Success"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - missing note ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "ID da nota não fornecido"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Erro durante processamento"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "Note ID not provided"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Error during processing"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "Token inválido"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Erro durante processamento"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "Invalid token"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Error during processing"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Note not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "Nota não encontrada"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Erro durante processamento"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "Note not found"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Error during processing"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Method not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "Método não permitido"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Erro durante processamento"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "Method not allowed"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Error during processing"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "Erro ao excluir nota"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Erro durante processamento"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "Error deleting note"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Error during processing"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/publish-note": {
+      "put": {
+        "tags": ["Notes"],
+        "summary": "Publish/Unpublish Note",
+        "description": "Toggles the publication status of a note between public and private",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Note ID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Note updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "Sua nota foi atualizada com sucesso!"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Success code",
+                          "example": "Sucesso"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "Your note was updated successfully!"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Success code",
+                          "example": "Success"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - missing note ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "ID da nota não fornecido"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Erro durante processamento"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "Note ID not provided"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Error during processing"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "Token inválido"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Erro durante processamento"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "Invalid token"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Error during processing"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Note not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "Nota não encontrada"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Erro durante processamento"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "Note not found"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Error during processing"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Method not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "Método não permitido"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Erro durante processamento"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "Method not allowed"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Error during processing"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pt": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in Portuguese",
+                          "example": "Erro ao publicar nota"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Erro durante processamento"
+                        }
+                      }
+                    },
+                    "en": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "Message in English",
+                          "example": "Error publishing note"
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Error code",
+                          "example": "Error during processing"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+} 

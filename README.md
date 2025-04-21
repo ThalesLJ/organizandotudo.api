@@ -258,6 +258,28 @@ Resposta:
 }
 ```
 
+#### Publicar/Despublicar Nota
+```http
+PUT /.netlify/functions/publish-note?id=123
+Authorization: Bearer seu_token_jwt
+```
+
+Resposta:
+```json
+{
+  "pt": {
+    "message": "Sua nota foi atualizada com sucesso!",
+    "code": "Sucesso"
+  },
+  "en": {
+    "message": "Your note was updated successfully!",
+    "code": "Success"
+  }
+}
+```
+
+Este endpoint alterna o status de publicação da nota entre público e privado. Se a nota estiver privada (public: false), ficará pública (public: true) e vice-versa.
+
 ## Segurança
 
 - Todos os dados sensíveis (username, email, password) são criptografados no banco de dados

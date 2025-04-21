@@ -1,7 +1,7 @@
 [build]
   functions = "netlify/functions"
-  command = "npm run build"
-  publish = "dist"
+  command = "npm install"
+  publish = "."
 
 [functions]
   node_bundler = "esbuild"
@@ -40,4 +40,14 @@
 [[redirects]]
   from = "/api/PublishNote"
   to = "/.netlify/functions/publish-note"
+  status = 200
+
+[[redirects]]
+  from = "/"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/swagger.json"
+  to = "/swagger.json"
   status = 200 
