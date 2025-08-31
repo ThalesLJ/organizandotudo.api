@@ -3,6 +3,7 @@ import { Note, CreateNoteRequest, UpdateNoteRequest, SuccessResponse, ErrorRespo
 import { validateAuthorizationHeader } from "./utils";
 import { MongoClient, ObjectId } from "mongodb";
 import { encryptData, decryptData } from "./utils/crypto";
+import { withCors } from './middleware/cors';
 
 const client = new MongoClient(process.env.MONGODB_URI!);
 const db = client.db(process.env.MONGODB_DATABASE);
@@ -455,4 +456,5 @@ const handler: Handler = async (event: HandlerEvent) => {
   };
 };
 
-export { handler }; 
+const corsHandler = withCors(handler);
+export { corsHandler as handler }; 

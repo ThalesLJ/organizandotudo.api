@@ -7,40 +7,56 @@
   node_bundler = "esbuild"
   external_node_modules = ["mongodb", "jsonwebtoken", "bcryptjs"]
 
+[[headers]]
+  for = "/api/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
+    Access-Control-Allow-Headers = "Content-Type, Authorization, X-Requested-With, Accept, Origin"
+    Access-Control-Allow-Credentials = "true"
+    Access-Control-Max-Age = "86400"
+
 [[redirects]]
   from = "/api/CreateAccount"
   to = "/.netlify/functions/create-account"
   status = 200
+  headers = {Access-Control-Allow-Origin = "*", Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS", Access-Control-Allow-Headers = "Content-Type, Authorization, X-Requested-With, Accept, Origin"}
 
 [[redirects]]
   from = "/api/Login"
   to = "/.netlify/functions/login"
   status = 200
+  headers = {Access-Control-Allow-Origin = "*", Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS", Access-Control-Allow-Headers = "Content-Type, Authorization, X-Requested-With, Accept, Origin"}
 
 [[redirects]]
   from = "/api/VerifyToken"
   to = "/.netlify/functions/verify-token"
   status = 200
+  headers = {Access-Control-Allow-Origin = "*", Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS", Access-Control-Allow-Headers = "Content-Type, Authorization, X-Requested-With, Accept, Origin"}
 
 [[redirects]]
   from = "/api/User"
   to = "/.netlify/functions/user"
   status = 200
+  headers = {Access-Control-Allow-Origin = "*", Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS", Access-Control-Allow-Headers = "Content-Type, Authorization, X-Requested-With, Accept, Origin"}
 
 [[redirects]]
   from = "/api/Note"
   to = "/.netlify/functions/note"
   status = 200
+  headers = {Access-Control-Allow-Origin = "*", Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS", Access-Control-Allow-Headers = "Content-Type, Authorization, X-Requested-With, Accept, Origin"}
 
 [[redirects]]
   from = "/api/Notes"
   to = "/.netlify/functions/notes"
   status = 200
+  headers = {Access-Control-Allow-Origin = "*", Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS", Access-Control-Allow-Headers = "Content-Type, Authorization, X-Requested-With, Accept, Origin"}
 
 [[redirects]]
   from = "/api/PublishNote"
   to = "/.netlify/functions/publish-note"
   status = 200
+  headers = {Access-Control-Allow-Origin = "*", Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS", Access-Control-Allow-Headers = "Content-Type, Authorization, X-Requested-With, Accept, Origin"}
 
 [[redirects]]
   from = "/"

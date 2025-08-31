@@ -2,6 +2,7 @@ import { Handler } from "@netlify/functions";
 import { connectToDatabase, closeConnection } from './config/mongodb';
 import { encryptData, decryptData } from './utils/crypto';
 import jwt from 'jsonwebtoken';
+import { withCors } from './middleware/cors';
 
 const handler: Handler = async (event) => {
   if (event.httpMethod !== "POST") {
@@ -121,4 +122,5 @@ const handler: Handler = async (event) => {
   }
 };
 
-export { handler }; 
+const corsHandler = withCors(handler);
+export { corsHandler as handler }; 

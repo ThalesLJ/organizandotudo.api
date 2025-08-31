@@ -2,6 +2,7 @@ import { Handler, HandlerEvent } from "@netlify/functions";
 import { SuccessResponse, ErrorResponse } from "./types";
 import { validateAuthorizationHeader } from "./utils";
 import { MongoClient } from "mongodb";
+import { withCors } from './middleware/cors';
 
 const client = new MongoClient(process.env.MONGODB_URI!);
 const db = client.db(process.env.MONGODB_DATABASE);
@@ -88,4 +89,5 @@ const handler: Handler = async (event: HandlerEvent) => {
   }
 };
 
-export { handler }; 
+const corsHandler = withCors(handler);
+export { corsHandler as handler }; 
