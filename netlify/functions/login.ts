@@ -73,9 +73,9 @@ const handler: Handler = async (event) => {
       }
 
       const tokenData = {
-        username: decryptData(user.username),
+        username: user.username,
         email: user.email,
-        password: decryptedPassword,
+        password: user.password,
         issuedAt: new Date().toISOString()
       };
 
@@ -92,13 +92,15 @@ const handler: Handler = async (event) => {
 
       await closeConnection();
 
+      const response = {
+        token,
+        username: decryptData(user.username),
+        email: decryptData(user.email)
+      };
+
       return {
         statusCode: 200,
-        body: JSON.stringify({
-          token,
-          username: decryptData(user.username),
-          email: decryptData(user.email)
-        })
+        body: JSON.stringify(response)
       };
     } catch (decryptError) {
       return {

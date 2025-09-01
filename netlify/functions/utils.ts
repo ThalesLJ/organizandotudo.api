@@ -1,5 +1,7 @@
 import { HandlerEvent } from "@netlify/functions";
 import { ErrorResponse } from "./types";
+import jwt from "jsonwebtoken";
+import { decryptData } from "./utils/crypto";
 
 export function validateRequiredFields(event: HandlerEvent, fields: string[]): ErrorResponse | null {
   if (!event.body) {
@@ -86,4 +88,34 @@ export function validateQueryStringParameters(event: HandlerEvent, params: strin
   }
 
   return null;
+} 
+
+export function getUserFromToken(event: HandlerEvent): { username: string; email: string; password: string } | null {
+  try {
+    const authHeader = event.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return null;
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const secret = process.env.JWT_SECRET;
+    
+    if (!secret) {
+      return null;
+    }
+
+    const decoded = jwt.verify(token, secret) as any;
+    
+    if (!decoded || !decoded.username || !decoded.email || !decoded.password) {
+      return null;
+    }
+
+    return {
+      username: decryptData(decoded.username),
+      email: decryptData(decoded.email),
+      password: decryptData(decoded.password)
+    };
+  } catch (error) {
+    return null;
+  }
 } 

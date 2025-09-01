@@ -65,9 +65,9 @@ const handler: Handler = async (event) => {
     tokenExpiration.setDate(tokenExpiration.getDate() + 30);
 
     const tokenData = {
-      username,
-      email,
-      password,
+      username: encryptedUsername,
+      email: encryptedEmail,
+      password: encryptedPassword,
       issuedAt: new Date().toISOString()
     };
 
