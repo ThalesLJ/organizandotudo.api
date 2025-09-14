@@ -70,7 +70,7 @@ jobs:
       run: |
         echo "MONGODB_URI=${{ secrets.MONGODB_URI }}" > .env
         echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
-        echo "JWT_EXPIRES_IN=${{ secrets.JWT_EXPIRES_IN:-30d }}" >> .env
+        echo "JWT_EXPIRES_IN=${{ secrets.JWT_EXPIRES_IN }}" >> .env
         echo "ENCRYPTION_KEY=${{ secrets.ENCRYPTION_KEY }}" >> .env
         echo "PORT=3000" >> .env
         echo "NODE_ENV=production" >> .env
