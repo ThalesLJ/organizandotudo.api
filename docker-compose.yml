@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  api:
+    image: thaleslj/organizandotudo.api:latest
+    container_name: organizandotudo-api
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - MONGODB_URI=${MONGODB_URI}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-30d}
+      - PORT=${PORT:-3000}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+    restart: unless-stopped
+    networks:
+      - organizandotudo-network
+
+networks:
+  organizandotudo-network:
+    name: organizandotudo-network
+    driver: bridge
