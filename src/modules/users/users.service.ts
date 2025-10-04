@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, UnauthorizedException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User } from './schemas/user.schema';
@@ -44,7 +44,7 @@ export class UsersService {
     }).exec();
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+  async update(id: string, updateUserDto: Partial<UpdateUserDto>): Promise<User> {
     const user = await this.userModel.findByIdAndUpdate(
       id,
       { ...updateUserDto, updatedAt: new Date() },
@@ -77,6 +77,21 @@ export class UsersService {
   }
 
   async updateProfile(userId: string, updateUserDto: UpdateUserDto) {
+    // Get current user to verify password
+    const currentUser = await this.userModel.findById(userId).exec();
+    if (!currentUser) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Verify current password
+    const isPasswordValid = await this.encryptionService.comparePassword(
+      updateUserDto.password,
+      currentUser.password,
+    );
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Invalid current password');
+    }
+
     // Check if username or email already exists (excluding current user)
     if (updateUserDto.username) {
       const existingUser = await this.userModel.findOne({
@@ -98,12 +113,10 @@ export class UsersService {
       }
     }
 
-    // Hash password if provided
-    if (updateUserDto.password) {
-      updateUserDto.password = await this.encryptionService.hashPassword(updateUserDto.password);
-    }
+    // Remove password from update data (it's only for authentication)
+    const { password, ...updateData } = updateUserDto;
 
-    const user = await this.update(userId, updateUserDto);
+    const user = await this.update(userId, updateData);
     return {
       message: 'Profile updated successfully',
       user: {

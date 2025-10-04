@@ -22,8 +22,9 @@ export class UsersController {
   @Put('profile')
   @ApiOperation({ summary: 'Update current user profile' })
   @ApiResponse({ status: 200, description: 'User profile updated successfully' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 401, description: 'Unauthorized or invalid password' })
   @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 409, description: 'Username or email already exists' })
   updateProfile(@Request() req, @Body() updateUserDto: UpdateUserDto) {
     return this.usersService.updateProfile(req.user._id, updateUserDto);
   }

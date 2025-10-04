@@ -25,13 +25,12 @@ export class UpdateUserDto {
   email?: string;
 
   @ApiProperty({
-    description: 'User password',
-    example: 'newpassword123',
+    description: 'Current password for authentication',
+    example: 'currentpassword123',
     minLength: 6,
-    required: false,
+    required: true,
   })
-  @IsOptional()
   @IsString()
   @MinLength(6)
-  password?: string;
+  password: string;
 }
